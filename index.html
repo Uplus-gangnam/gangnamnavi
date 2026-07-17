@@ -338,28 +338,60 @@ const ALL_TAGS = Array.from(new Set(DATA.flatMap(d=>d.tags))).sort();
 //   return error ? [] : data;
 // }
 const DATA_CASES = [
-  { id:'c1', presenter:'김OO 매니저', org:'The강남 상권 1팀', title:'유학생 고객 대상 실시간 통역 시연',
-    points:['고객 니즈를 먼저 질문으로 확인','통역 기능을 실제 상황처럼 시연','경쟁사 대비 데이터 미사용 강점 강조'],
-    script:'고객님, 한국어 강의 자료 보실 때 어려움 있으셨죠? **실시간 통역** 기능으로 지금 바로 확인해보실까요?',
-    video_url:'', thumb:'' },
-  { id:'c2', presenter:'이OO 매니저', org:'The강남 상권 2팀', title:'소상공인 고객 대상 멀티윈도우 시연',
-    points:['배달앱·예약 동시 대응 시나리오 구성','실제 사장님 톤으로 공감 형성','요금제 혜택을 자연스럽게 연결'],
-    script:'사장님, 배달앱이랑 카톡 채널 동시에 확인하시려면 화면 나눠서 써보세요. **멀티 윈도우**로 지금 보여드릴게요.',
-    video_url:'', thumb:'' },
-  { id:'c3', presenter:'박OO 매니저', org:'The강남 상권 3팀', title:'법인 대표 고객 대상 폴더블 활용 시연',
-    points:['미팅 시나리오 롤플레이로 몰입감 상승','워치 연동까지 확장해 객단가 상승 유도'],
-    script:'대표님, 계약서 검토하실 때 화면 작아서 불편하셨죠? **8인치 대화면**으로 지금 바로 비교해보세요.',
-    video_url:'', thumb:'' }
+  { 
+    id: 'c1', 
+    presenter: '안세영 매니저', 
+    org: '국가대표팀', 
+    title: '유학생 고객 대상 실시간 통역 시연',
+    points: ['고객 니즈를 먼저 질문으로 확인', '통역 기능을 실제 상황처럼 시연', '경쟁사 대비 데이터 미사용 강점 강조'],
+    script: '고객님, 한국어 강의 자료 보실 때 어려움 있으셨죠? **실시간 통역** 기능으로 지금 바로 확인해보실까요?',
+    // 💡 여기에 원하는 유튜브 주소만 입력하시면 됩니다!
+    video_url: 'https://www.youtube.com/watch?v=z0vUvOsBqw4&list=RDz0vUvOsBqw4&start_radio=1', 
+    thumb: '' // 자동 생성이므로 비워두셔도 됩니다.
+  },
+  { 
+    id: 'c2', 
+    presenter: '장경준 매니저', 
+    org: '강남영업추진팀', 
+    title: '소상공인 고객 대상 멀티윈도우 시연',
+    points: ['배달앱·예약 동시 대응 시나리오 구성', '실제 사장님 톤으로 공감 형성', '요금제 혜택을 자연스럽게 연결'],
+    script: '사장님, 배달앱이랑 카톡 채널 동시에 확인하시려면 화면 나눠서 써보세요. **멀티 윈도우**로 지금 보여드릴게요.',
+    video_url: 'https://www.youtube.com/watch?v=Ui-FY3EFfgM', 
+    thumb: '' 
+  },
+  { 
+    id: 'c3', 
+    presenter: '김태연 매니저', 
+    org: '안산소매영업팀', 
+    title: '법인 대표 고객 대상 폴더블 활용 시연',
+    points: ['미팅 시나리오 롤플레이로 몰입감 상승', '워치 연동까지 확장해 객단가 상승 유도'],
+    script: '대표님, 계약서 검토하실 때 화면 작아서 불편하셨죠? **8인치 대화면**으로 지금 바로 비교해보세요.',
+    video_url: 'https://www.youtube.com/watch?v=gN8Le8_EInY', 
+    thumb: '' 
+  }
 ];
+
 function getYoutubeId(url){
   if(!url) return null;
   const m = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
   return m ? m[1] : null;
 }
-async function fetchCases(){
-  return new Promise(res=> setTimeout(()=> res(DATA_CASES), 250)); // mock 로딩 지연
-}
 
+async function fetchCases(){
+  const processedData = DATA_CASES.map(item => {
+    const newItem = { ...item };
+    if (newItem.video_url && !newItem.thumb) {
+      const videoId = getYoutubeId(newItem.video_url);
+      if (videoId) {
+        // 💡 이 부분을 중괄호 {} 형태의 템플릿 리터럴로 정확하게 수정합니다.
+        newItem.thumb = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      }
+    }
+    return newItem;
+  });
+
+  return new Promise(res => setTimeout(() => res(processedData), 250));
+}
 const state = { nationality:null, age:null, residence:null, occupation:null, family:null, tags:new Set() };
 
 // 앱 레벨 탭 라우터: 탭별 독립 stack/currentEl 보유
@@ -826,12 +858,12 @@ function buildCaseDetail(caseId){
     if(!c){ body.innerHTML = '<div class="emptynote">사례를 찾을 수 없어요.</div>'; return; }
     const vid = getYoutubeId(c.video_url);
     body.innerHTML = '';
-    body.appendChild(el(`
-      <div class="videowrap">
-        ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" title="${c.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-              : `<div class="noclip"><span>🎬</span>영상 준비 중</div>`}
-      </div>
-    `));
+   body.appendChild(el(`
+  <div class="videowrap">
+    ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" title="${c.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+          : `<div class="noclip"><span>🎬 </span>영상 준비 중</div>`}
+  </div>
+`));
     body.appendChild(el(`
       <div class="detail-hero">
         <img src="${c.thumb || photoSrc('p1')}" alt="${c.presenter}">
