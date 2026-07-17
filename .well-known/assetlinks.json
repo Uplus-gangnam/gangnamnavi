@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.gangnamnavi.twa",
+        "sha256_cert_fingerprints": ["50:76:75:7F:38:7A:78:5F:99:D4:5B:FA:0C:D1:20:88:5A:BA:22:45:A5:41:8B:70:7A:77:4F:A6:42:69:C9:15"]
+      }
+    }]
