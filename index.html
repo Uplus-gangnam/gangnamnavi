@@ -63,7 +63,7 @@
     background:radial-gradient(ellipse 480px 260px at 50% 0%, rgba(62,123,250,0.16), transparent 65%);
   }
 
-  #screenHost{position:absolute;inset:0;overflow:hidden;z-index:1;}
+  #screenHost{position:absolute;inset:0 0 calc(58px + env(safe-area-inset-bottom)) 0;overflow:hidden;z-index:1;}
   .screen{
     position:absolute;inset:0;display:flex;flex-direction:column;
     overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -237,12 +237,60 @@
   .sectionlabel{font-size:11px;font-weight:800;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;margin:0 0 12px;}
 
   .emptynote{text-align:center;color:var(--ink-faint);font-size:12.5px;padding:40px 10px;font-weight:500;}
+
+  /* ---------- 앱 하단 탭바 ---------- */
+  .apptabbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:5;
+    display:flex;background:rgba(6,10,22,0.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-top:1px solid var(--line-soft);
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom));
+  }
+  .tabbtn{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;cursor:pointer;padding:5px 4px;color:var(--ink-faint);
+    font-size:10.5px;font-weight:700;transition:.15s;border-radius:12px;
+  }
+  .tabbtn:hover{color:var(--ink-soft);}
+  .tabbtn .ticon{font-size:19px;line-height:1;}
+  .tabbtn.active{color:var(--blue-bright);}
+
+  /* ---------- 우수 시연 사례 ---------- */
+  .casecard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+    overflow:hidden;cursor:pointer;transition:.15s;margin-bottom:12px;
+  }
+  .casecard:hover{border-color:rgba(125,174,255,0.4);background:var(--surface-strong);}
+  .casecard .thumb{width:100%;aspect-ratio:16/9;background:var(--surface-strong);position:relative;overflow:hidden;}
+  .casecard .thumb img{width:100%;height:100%;object-fit:cover;}
+  .casecard .thumb .playbadge{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,0.55) 100%);
+  }
+  .casecard .thumb .playbadge span{
+    width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.16);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;
+  }
+  .casecard .cbody{padding:13px 14px;}
+  .casecard .corg{font-size:10.5px;font-weight:800;color:var(--blue-bright);text-transform:uppercase;letter-spacing:.04em;margin:0 0 3px;}
+  .casecard .ctitle{font-size:14px;font-weight:800;margin:0 0 4px;line-height:1.4;}
+  .casecard .cpresenter{font-size:11.5px;color:var(--ink-faint);font-weight:600;margin:0;}
+
+  .videowrap{width:100%;aspect-ratio:16/9;border-radius:var(--radius-md);overflow:hidden;background:#000;margin-bottom:18px;}
+  .videowrap iframe{width:100%;height:100%;border:0;display:block;}
+  .videowrap .noclip{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-faint);font-size:12px;font-weight:600;flex-direction:column;gap:8px;
+  }
 </style>
 </head>
 <body>
 <div class="stage-wrap">
   <div class="phone">
     <div id="screenHost"></div>
+    <nav class="apptabbar" id="appTabbar">
+      <button class="tabbtn active" data-tab="guide" type="button"><span class="ticon">🧭</span>시연가이드</button>
+      <button class="tabbtn" data-tab="cases" type="button"><span class="ticon">🏆</span>우수 시연 사례</button>
+    </nav>
   </div>
 </div>
 
@@ -281,8 +329,46 @@ const STEPS = [
 ];
 const ALL_TAGS = Array.from(new Set(DATA.flatMap(d=>d.tags))).sort();
 
+/* ===================== 우수 시연 사례 (Mock → Supabase 전환 예정) ===================== */
+// TODO: Supabase 프로젝트 생성 후 fetchCases() 내부만 아래처럼 교체
+// import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// async function fetchCases(){
+//   const { data, error } = await supabase.from('demo_cases').select('*').order('created_at', { ascending:false });
+//   return error ? [] : data;
+// }
+const DATA_CASES = [
+  { id:'c1', presenter:'김OO 매니저', org:'The강남 상권 1팀', title:'유학생 고객 대상 실시간 통역 시연',
+    points:['고객 니즈를 먼저 질문으로 확인','통역 기능을 실제 상황처럼 시연','경쟁사 대비 데이터 미사용 강점 강조'],
+    script:'고객님, 한국어 강의 자료 보실 때 어려움 있으셨죠? **실시간 통역** 기능으로 지금 바로 확인해보실까요?',
+    video_url:'', thumb:'' },
+  { id:'c2', presenter:'이OO 매니저', org:'The강남 상권 2팀', title:'소상공인 고객 대상 멀티윈도우 시연',
+    points:['배달앱·예약 동시 대응 시나리오 구성','실제 사장님 톤으로 공감 형성','요금제 혜택을 자연스럽게 연결'],
+    script:'사장님, 배달앱이랑 카톡 채널 동시에 확인하시려면 화면 나눠서 써보세요. **멀티 윈도우**로 지금 보여드릴게요.',
+    video_url:'', thumb:'' },
+  { id:'c3', presenter:'박OO 매니저', org:'The강남 상권 3팀', title:'법인 대표 고객 대상 폴더블 활용 시연',
+    points:['미팅 시나리오 롤플레이로 몰입감 상승','워치 연동까지 확장해 객단가 상승 유도'],
+    script:'대표님, 계약서 검토하실 때 화면 작아서 불편하셨죠? **8인치 대화면**으로 지금 바로 비교해보세요.',
+    video_url:'', thumb:'' }
+];
+function getYoutubeId(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+async function fetchCases(){
+  return new Promise(res=> setTimeout(()=> res(DATA_CASES), 250)); // mock 로딩 지연
+}
+
 const state = { nationality:null, age:null, residence:null, occupation:null, family:null, tags:new Set() };
-let stack = [{id:'intro'}];
+
+// 앱 레벨 탭 라우터: 탭별 독립 stack/currentEl 보유
+let appTab = 'guide';
+const ROUTERS = {
+  guide: { stack:[{id:'intro'}], currentEl:null },
+  cases: { stack:[{id:'caseList'}], currentEl:null }
+};
+let stack = ROUTERS.guide.stack; // 활성 탭 stack 포인터 (재할당 금지, mutate만)
 let currentEl = null;
 
 /* ===================== 네비게이션 엔진 ===================== */
@@ -312,7 +398,8 @@ function resetAll(){
   if(!acquireNavLock()) return;
   STEPS.forEach(s=> state[s.key]=null);
   state.tags = new Set();
-  stack = [{id:'intro'}];
+  stack.length = 0;
+  stack.push({id:'intro'});
   transition('pop');
 }
 let navLock = false;
@@ -326,6 +413,7 @@ function transition(dir){
   Array.from(host.children).forEach(c=>{ if(c!==old) c.remove(); });
   host.appendChild(newEl);
   currentEl = newEl;
+  ROUTERS[appTab].currentEl = newEl;
   // 진입 애니메이션 종료 후 클래스 제거 → fill-mode 의존 없이 요소 기본 상태로 안착
   const settleNew = ()=>{ newEl.classList.remove('anim-in-push','anim-in-pop'); };
   newEl.addEventListener('animationend', settleNew, {once:true});
@@ -341,10 +429,29 @@ function transition(dir){
 }
 function initRender(){
   const host = document.getElementById('screenHost');
-  const first = render(stack[0]);
+  const first = render(stack[stack.length-1]);
   first.classList.add('screen');
+  host.innerHTML = '';
   host.appendChild(first);
   currentEl = first;
+  ROUTERS[appTab].currentEl = first;
+}
+
+// 탭 전환: 애니메이션 없이 즉시 스왑, 탭별 stack/currentEl 유지
+function switchTab(tab){
+  if(tab===appTab || navLock) return;
+  appTab = tab;
+  stack = ROUTERS[tab].stack;
+  document.querySelectorAll('.tabbtn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  const host = document.getElementById('screenHost');
+  if(ROUTERS[tab].currentEl){
+    currentEl = ROUTERS[tab].currentEl;
+    currentEl.classList.remove('anim-out-push','anim-out-pop','anim-in-push','anim-in-pop');
+    host.innerHTML = '';
+    host.appendChild(currentEl);
+  } else {
+    initRender();
+  }
 }
 
 /* ===================== 스코어 ===================== */
@@ -384,6 +491,8 @@ function render(entry){
   if(entry.id==='tags') return buildTags();
   if(entry.id==='results') return buildResults();
   if(entry.id==='detail') return buildDetail(entry.personaId, entry.sub);
+  if(entry.id==='caseList') return buildCaseList();
+  if(entry.id==='caseDetail') return buildCaseDetail(entry.caseId);
   return el('<div class="screen"></div>');
 }
 
@@ -660,6 +769,94 @@ function buildDetail(personaId, sub){
   return root;
 }
 
+/* ===================== 우수 시연 사례 화면 ===================== */
+function buildCaseList(){
+  const root = el(`
+    <div>
+      <div class="topbar"><span class="steplabel">우수 시연 사례</span></div>
+      <div class="content">
+        <p class="eyebrow">Best Practice</p>
+        <h2 class="h1">시연을 빛낸<br><span class="accent">우수 사례</span></h2>
+        <p class="sub">우수 시연자의 영상과 Script를 확인하고 나만의 시연에 적용해보세요.</p>
+        <div id="caseListWrap"><div class="emptynote">불러오는 중...</div></div>
+      </div>
+    </div>
+  `);
+  const wrap = root.querySelector('#caseListWrap');
+  fetchCases().then(list=>{
+    wrap.innerHTML = '';
+    if(list.length===0){ wrap.appendChild(el(`<div class="emptynote">등록된 우수 시연 사례가 없어요.</div>`)); return; }
+    list.forEach(c=>{
+      const vid = getYoutubeId(c.video_url);
+      const thumbSrc = vid ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg` : (c.thumb || '');
+      const card = el(`
+        <div class="casecard">
+          <div class="thumb">
+            ${thumbSrc ? `<img src="${thumbSrc}" alt="${c.title}">` : ''}
+            <div class="playbadge"><span>▶</span></div>
+          </div>
+          <div class="cbody">
+            <p class="corg">${c.org}</p>
+            <p class="ctitle">${c.title}</p>
+            <p class="cpresenter">${c.presenter} · 우수 포인트 ${c.points.length}개</p>
+          </div>
+        </div>
+      `);
+      card.onclick = ()=> goTo({id:'caseDetail', caseId:c.id});
+      wrap.appendChild(card);
+    });
+  });
+  return root;
+}
+
+function buildCaseDetail(caseId){
+  const root = el(`
+    <div>
+      <div class="topbar">
+        <button class="backbtn" id="backBtn">←</button>
+        <span class="steplabel">우수 시연 사례</span>
+      </div>
+      <div class="content" id="caseDetailBody"><div class="emptynote">불러오는 중...</div></div>
+    </div>
+  `);
+  root.querySelector('#backBtn').onclick = goBack;
+  const body = root.querySelector('#caseDetailBody');
+  fetchCases().then(list=>{
+    const c = list.find(x=>x.id===caseId);
+    if(!c){ body.innerHTML = '<div class="emptynote">사례를 찾을 수 없어요.</div>'; return; }
+    const vid = getYoutubeId(c.video_url);
+    body.innerHTML = '';
+    body.appendChild(el(`
+      <div class="videowrap">
+        ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" title="${c.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+              : `<div class="noclip"><span>🎬</span>영상 준비 중</div>`}
+      </div>
+    `));
+    body.appendChild(el(`
+      <div class="detail-hero">
+        <img src="${c.thumb || photoSrc('p1')}" alt="${c.presenter}">
+        <div>
+          <span class="catpill" style="color:var(--blue-bright);background:rgba(62,123,250,0.15)">${c.org}</span>
+          <p class="pname">${c.presenter} · ${c.title}</p>
+        </div>
+      </div>
+    `));
+    body.appendChild(el(`<p class="sectionlabel">시연 우수 포인트</p>`));
+    body.appendChild(el(`<div class="traitchips">${c.points.map(p=>`<span>${p}</span>`).join('')}</div>`));
+    body.appendChild(el(`<p class="sectionlabel" style="margin-top:18px;">Sales Script</p>`));
+    const box = el(`<div class="scriptbox"><span>${mdToHtml(c.script)}</span><button class="copybtn" id="caseCopyBtn">스크립트 복사</button></div>`);
+    body.appendChild(box);
+    box.querySelector('#caseCopyBtn').onclick = (e)=>{
+      const btn = e.currentTarget;
+      const finish = ()=>{ btn.textContent='복사 완료'; btn.classList.add('done');
+        setTimeout(()=>{ btn.textContent='스크립트 복사'; btn.classList.remove('done'); }, 1600); };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(c.script).then(finish).catch(finish); }
+      else { finish(); }
+    };
+  });
+  return root;
+}
+
 /* ===================== 스와이프 제스처 ===================== */
 /* 오른쪽으로 밀기 → 이전 화면 / 왼쪽으로 밀기 → 다음 화면(활성화된 기본 버튼이 있을 때만) */
 /* data-no-swipe 버튼(초기화 등 되돌릴 수 없는 동작)은 스와이프로 실행되지 않음 */
@@ -737,6 +934,10 @@ function setupSwipe(){
   host.addEventListener('touchend', finish);
   host.addEventListener('touchcancel', finish);
 }
+
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
 
 initRender();
 setupSwipe();
