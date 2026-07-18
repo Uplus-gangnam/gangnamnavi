@@ -2,7 +2,7 @@
 // service-worker.js
 // 캐시 버전: 배포마다 CACHE_VERSION 값을 올려서 갱신 트리거
 // ==================================================
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.1';
 const CACHE_NAME = `gn-navigator-${CACHE_VERSION}`;
 
 // 최초 설치 시 선캐싱할 앱 셸(App Shell)
@@ -47,6 +47,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   const isSameOrigin = url.origin === self.location.origin;
+  const isSupabase = url.hostname.endsWith('.supabase.co');
+
+  // 0) Supabase API 요청 -> 캐싱 제외, 항상 최신 데이터
+  if (isSupabase) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // 1) 네비게이션 요청
   if (request.mode === 'navigate') {
